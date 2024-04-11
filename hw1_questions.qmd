@@ -1,6 +1,6 @@
 ---
 title: "A Replication of Karlan and List (2007)"
-author: "Your Name"
+author: "Sangho Lee"
 date: today
 format: html
 callout-appearance: minimal # this hides the blue "i" icon on .callout-notes
@@ -18,7 +18,34 @@ This project seeks to replicate their results.
 
 ### Description
 
-*todo: Read the data into R/Python and describe the data*
+
+#### I will now load the data and preview the first few rows. Since the data is in .dta format, I'm going to use the haven package to import it into this environment. Then, I will display the top 10 rows as a sample.
+
+
+```{r, warning=FALSE, message=FALSE}
+library(haven)
+library(tidyverse)
+library(magrittr)
+library(kableExtra)
+
+```
+
+
+
+
+```{r, warning=FALSE, message=FALSE}
+data <- haven::read_dta("karlan_list_2007.dta")
+
+
+# Create a table
+data %>% 
+  head(10) %>% 
+  knitr::kable() 
+
+```
+
+
+
 
 ::: {.callout-note collapse="true"}
 ### Variable Definitions
