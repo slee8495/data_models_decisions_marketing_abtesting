@@ -3,6 +3,9 @@ title: "A Replication of Karlan and List (2007)"
 author: "Sangho Lee"
 date: today
 format: html
+engines:
+  - r
+  - python
 callout-appearance: minimal # this hides the blue "i" icon on .callout-notes
 ---
 
@@ -27,6 +30,9 @@ library(haven)
 library(tidyverse)
 library(magrittr)
 library(kableExtra)
+library(reticulate)
+library(lmtest)
+library(scales)
 
 ```
 
@@ -36,7 +42,6 @@ library(kableExtra)
 ```{r, warning=FALSE, message=FALSE}
 data <- haven::read_dta("karlan_list_2007.dta")
 
-
 # Create a table
 data %>% 
   head(10) %>% 
@@ -44,6 +49,23 @@ data %>%
 
 ```
 
+<br>
+
+#### I am also going to load the Python packages that I will need to complete the work in this environment.
+
+```{python}
+import pandas as pd
+import numpy as np
+import pyrsm as rsm
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+
+```
+
+```{python, include = FALSE}
+data = pd.read_stata("karlan_list_2007.dta")
+
+```
 
 
 
@@ -105,11 +127,87 @@ data %>%
 | `pop_propurban`      | Proportion of population urban within zip code                      |
 :::
 
+<br>
+
 ### Balance Test
 
 As an ad hoc test of the randomization mechanism, I provide a series of tests that compare aspects of the treatment and control groups to assess whether they are statistically significantly different from one another.
 
-*todo: test a few variables other than the key outcome variables (for example, test months since last donation) to see if the treatment and control groups are statistically significantly different at the 95% confidence level. Do each as a t-test and separately as a linear regression, and confirm you get the exact same results from both methods. When doing a t-test, use the formula in the class slides. When doing the linear regression, regress for example mrm2 on treatment and look at the estimated coefficient on the treatment variable. It might be helpful to compare parts of your analysis to Table 1 in the paper. Be sure to comment on your results (hint: why is Table 1 included in the paper).*
+
+#### I'm going to conduct t-tests and linear regressions on several variables, such as months since last donation, to determine if there are statistically significant differences between the treatment and control groups at the 95% confidence level. For the t-tests, I will use the t.test function in R to analyze the data. For the linear regressions, I will utilize the pyrsm package in Python to examine the impact of the treatment by regressing variables like months since last donation against the treatment group and observing the coefficient of the treatment variable. This approach will allow me to confirm that both methods yield consistent results.
+
+
+1. mrm2 variable
+```{r}
+t.test(mrm2 ~ treatment, data = data, conf.level = 0.95)
+
+```
+
+```{python}
+
+lm = rsm.model.regress(
+  data = data,
+  rvar = "mrm2",
+  evar = "treatment"
+)
+
+lm.summary()
+```
+
+- P-value: Both methods yield a p-value of approximately 0.905
+- Interpretation: There are no significant differences between the treatment and control groups for "mrm2" (months since last donation). This suggests effective randomization, indicating that any observed treatment effects are likely due to the treatment itself rather than pre-existing group differences.
+
+<br>
+
+2. pwhite variable
+
+```{r}
+t.test(pwhite ~ treatment, data = data, conf.level = 0.95)
+
+```
+
+```{python}
+
+lm = rsm.model.regress(
+  data = data,
+  rvar = "pwhite",
+  evar = "treatment"
+)
+
+lm.summary()
+```
+
+- P-value: Both the t-test and linear regression show a p-value around 0.575.
+- Interpretation: There is no significant difference in the proportion of white individuals between the treatment and control groups, indicating that the randomization was successful in creating comparable groups regarding racial composition.
+
+<br>
+
+3. female variable
+
+```{r}
+t.test(female ~ treatment, data = data, conf.level = 0.95)
+
+```
+
+```{python}
+
+lm = rsm.model.regress(
+  data = data,
+  rvar = "female",
+  evar = "treatment"
+)
+
+lm.summary()
+```
+
+- P-value: The t-test has a p-value of 0.07952 and the linear regression also shows a p-value of 0.079.
+- Interpretation: The results suggest a marginal difference in the proportion of females between the treatment and control groups that approaches but does not reach conventional levels of statistical significance (p < 0.05).
+
+##### Understanding the T-value and P-value
+- T-value (1.7535): The t-value measures the ratio of the difference between the group means to the standard error of the difference. A t-value of 1.7535 indicates that the difference between the group means (for the proportion of females in treatment versus control) is 1.7535 times the standard error away from zero.
+The sign (+) of the t-value suggests that the mean proportion of females in the treatment group is slightly lower than in the control group, given the negative coefficient in the regression output.
+
+- P-value (0.07952): The p-value tells us the probability of observing a t-value as extreme as 1.7535 (or more) if the null hypothesis were true which was there is no difference in the proportion of females between groups.
 
 ## Experimental Results
 
@@ -117,11 +215,102 @@ As an ad hoc test of the randomization mechanism, I provide a series of tests th
 
 First, I analyze whether matched donations lead to an increased response rate of making a donation.
 
-*todo: make a barplot with two bars. Each bar is the proportion of people who donated. One bar for treatment and one bar for control.*
+#### I'm going to create a bar plot that visualizes the proportion of people who donated, with two separate bars representing the treatment and control groups. This will allow for a clear comparison of the donation rates between the two groups
 
-*todo: run a t-test between the treatment and control groups on the binary outcome of whether any charitable donation was made. Also run a bivariate linear regression that demonstrates the same finding. (It may help to confirm your calculations match Table 2a Panel A.) Report your statistical results and interpret them in the context of the experiment (e.g., if you found a difference with a small p-value or that was statistically significant at some threshold, what have you learned about human behavior? Use mostly English words, not numbers or stats, to explain your finding.)*
 
-*todo: run a probit regression where the outcome variable is whether any charitable donation was made and the explanatory variable is assignment to treatment or control. Confirm that your results replicate Table 3 column 1 in the paper.*
+```{r}
+# Calculate the proportion of donations in the treatment and control groups using dplyr
+plot_data <- data %>%
+  group_by(treatment) %>%
+  summarise(Proportion_Donated = mean(gave == 1, na.rm = TRUE)) %>%
+  mutate(Group = ifelse(treatment == 1, "Treatment", "Control")) %>%
+  select(Group, Proportion_Donated)
+
+# Generate the bar plot using ggplot2
+ggplot(plot_data, aes(x = Group, y = Proportion_Donated, fill = Group)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.5) +
+  geom_text(aes(label=scales::percent(Proportion_Donated)), vjust=-0.3, size=5) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(y = "Proportion of Donations", title = "Proportion of People Who Donated by Group") +
+  theme_classic() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 22),
+    axis.title.y = element_text(size = 20),
+    axis.text.x = element_text(size = 20),
+    axis.title.x = element_blank(),
+    legend.position = "none"
+  ) +
+  scale_fill_manual(values = c("Treatment" = "#FF5733", "Control" = "#33C1FF"))
+
+```
+
+
+
+#### I'm going to perform a t-test to compare the treatment and control groups based on whether a charitable donation was made. Additionally, I will conduct a linear regression to analyze the same data. After obtaining the statistical outcomes, I will interpret these results in the context of the experiment. Specifically, if the results show a statistically significant difference, I'll discuss what these findings suggest about human behavior towards charitable giving, focusing more on qualitative insights rather than numerical data.
+
+
+```{r}
+t.test(gave ~ treatment, data = data, var.equal = FALSE)
+
+```
+
+```{python}
+
+lm = rsm.model.regress(
+  data = data,
+  rvar = "gave",
+  evar = "treatment"
+)
+
+lm.summary()
+```
+
+#### The t-test and linear regression both show that the treatment group had a slightly higher donation rate (2.2%) compared to the control group (1.8%). This statistically significant difference (p-value = 0.0013 for the t-test) suggests that even a modest intervention can effectively increase the likelihood of donating. This demonstrates how small nudges, such as targeted reminders, can influence human behavior and enhance donation rates, which is crucial for organizations aiming to improve their fundraising outcomes.
+
+<br>
+
+#### I'm going to conduct a probit regression where the outcome variable is whether a charitable donation was made, and the explanatory variable is whether individuals were assigned to the treatment or control group.
+
+```{python}
+# Create the dependent and independent variables
+X = data[['treatment']]  # independent variable
+X = sm.add_constant(X)  # adding a constant
+y = data['gave']  # dependent variable
+
+# Fit a probit model
+probit_model = sm.Probit(y, X).fit()
+
+# Print the summary of the model
+print(probit_model.summary())
+```
+
+<br>
+
+- Probit Regression Explained: Probit regression is a type of regression used in statistics to analyze binary (two outcome) variables. In this context, it models the probability that someone made a charitable donation based on whether they were in the treatment group or not.
+
+Key Elements of the Output: 
+
+- Dependent Variable (gave): This is what we're trying to predict: whether or not someone gave a donation (1 if yes, 0 if no).
+
+- Number of Observations (50,083): This is the total number of data points used in the model.
+
+- Model (Probit): The type of model used, which in this case uses a Probit link function. This function maps any input from minus infinity to infinity to a 0 to 1 range, fitting the binary nature of the dependent variable.
+
+- MLE (Maximum Likelihood Estimation): This is the method used to fit the model, optimizing to find the parameter values that maximize the likelihood of the data given the model.
+
+- Coefficients: 
+1. const (-2.1001): This is the intercept, or baseline log odds of donating when all predictors are 0 (i.e., not in the treatment group). A negative value indicates a low baseline probability of donation.
+2. treatment (0.0868): This coefficient shows the effect of being in the treatment group. It suggests that being in the treatment group increases the likelihood of donating compared to the control group.
+
+- Standard Error (std err): These values (0.023 for const and 0.028 for treatment) measure the average distance that the estimated values (coefficients) fall from the actual value. Smaller standard errors suggest more precise estimates.
+
+- Z-value: This is the test statistic used to determine whether to reject the null hypothesis (that the coefficient is zero, implying no effect). For the treatment, a z-value of 3.113 indicates a statistically significant effect.
+
+- P-value: For treatment (0.002), this value is very small, indicating strong evidence against the null hypothesis. It suggests that the treatment effect is statistically significant and not due to random chance.
+
+- Confidence Interval: For treatment ([0.032, 0.141]), this range gives us a 95% confidence level that the true coefficient falls within this interval. It confirms that the effect is positive and fairly precise.
+
+
 
 ### Differences between Match Rates
 
