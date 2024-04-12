@@ -24,14 +24,18 @@ This project seeks to replicate their results.
 
 #### I will now load the data and preview the first few rows. Since the data is in .dta format, I'm going to use the haven package to import it into this environment. Then, I will display the top 10 rows as a sample.
 
+```{r, include = FALSE}
+if (!"reticulate" %in% installed.packages()) {
+  install.packages("reticulate")
+}
+
+```
+
 
 ```{r, warning=FALSE, message=FALSE}
 library(haven)
 library(tidyverse)
 library(magrittr)
-library(kableExtra)
-library(reticulate)
-library(lmtest)
 library(scales)
 
 ```
