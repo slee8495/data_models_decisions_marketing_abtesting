@@ -15,7 +15,7 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   output$chapter <- renderUI({
-    file_name <- "hw1_questions copy.html" 
+    file_name <- "hw1_questions.html" 
     if (!is.null(file_name)) {
       tags$iframe(src = file_name, style = "width:100%; height:800px;")
     }

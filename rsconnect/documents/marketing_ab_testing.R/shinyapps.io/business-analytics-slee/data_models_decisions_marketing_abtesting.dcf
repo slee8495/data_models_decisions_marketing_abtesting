@@ -5,7 +5,7 @@ account: business-analytics-slee
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 11740300
-bundleId: 8485186
+bundleId: 8487520
 url: https://business-analytics-slee.shinyapps.io/data_models_decisions_marketing_abtesting/
 version: 1
 asMultiple: FALSE

@@ -13,14 +13,15 @@ callout-appearance: minimal # this hides the blue "i" icon on .callout-notes
 
 Dean Karlan at Yale and John List at the University of Chicago conducted a field experiment to test the effectiveness of different fundraising letters. They sent out 50,000 fundraising letters to potential donors, randomly assigning each letter to one of three treatments: a standard letter, a matching grant letter, or a challenge grant letter. They published the results of this experiment in the *American Economic Review* in 2007. The article and supporting data are available from the [AEA website](https://www.aeaweb.org/articles?id=10.1257/aer.97.5.1774) and from Innovations for Poverty Action as part of [Harvard's Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/27853&version=4.2).
 
-*to do: expand on the description of the experiment.*
+*What kind of problem are we solving, what is the story?* - I am addressing a field experiment evaluation problem focused on determining the effectiveness of different fundraising approaches in increasing donation rates. This study forms part of a project for the UC San Diego, MSBA program; MGTA 495 - Marketing Analytics course.
 
-This project seeks to replicate their results.
+*What is the goal of the analysis?* - The goal of the analysis is to develop a statistical model to compare the success rates of the three different types of fundraising letters. The model will evaluate which approach is most effective in generating donations and will provide insights into how variations in message framing can impact donor behavior. Ultimately, this analysis will help guide fundraising strategies by identifying the most effective methods for soliciting donations, thus enabling more efficient and targeted fundraising campaigns.
+
+<br>
 
 ## Data
 
 ### Description
-
 
 #### I will now load the data and preview the first few rows. Since the data is in .dta format, I'm going to use the haven package to import it into this environment. Then, I will display the top 10 rows as a sample.
 
@@ -31,17 +32,15 @@ if (!"reticulate" %in% installed.packages()) {
 
 ```
 
-
 ```{r, warning=FALSE, message=FALSE}
 library(haven)
 library(tidyverse)
 library(magrittr)
 library(scales)
+library(data.table)
+library(reticulate)
 
 ```
-
-
-
 
 ```{r, warning=FALSE, message=FALSE}
 data <- haven::read_dta("karlan_list_2007.dta")
@@ -64,6 +63,7 @@ import pyrsm as rsm
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 
+
 ```
 
 ```{python, include = FALSE}
@@ -71,13 +71,11 @@ data = pd.read_stata("karlan_list_2007.dta")
 
 ```
 
-
-
 ::: {.callout-note collapse="true"}
 ### Variable Definitions
 
 | Variable             | Description                                                         |
-|------------------|------------------------------------------------------|
+|-------------------|-----------------------------------------------------|
 | `treatment`          | Treatment                                                           |
 | `control`            | Control                                                             |
 | `ratio`              | Match ratio                                                         |
@@ -137,11 +135,10 @@ data = pd.read_stata("karlan_list_2007.dta")
 
 As an ad hoc test of the randomization mechanism, I provide a series of tests that compare aspects of the treatment and control groups to assess whether they are statistically significantly different from one another.
 
-
 #### I'm going to conduct t-tests and linear regressions on several variables, such as months since last donation, to determine if there are statistically significant differences between the treatment and control groups at the 95% confidence level. For the t-tests, I will use the t.test function in R to analyze the data. For the linear regressions, I will utilize the pyrsm package in Python to examine the impact of the treatment by regressing variables like months since last donation against the treatment group and observing the coefficient of the treatment variable. This approach will allow me to confirm that both methods yield consistent results.
 
+1.  mrm2 variable
 
-1. mrm2 variable
 ```{r}
 t.test(mrm2 ~ treatment, data = data, conf.level = 0.95)
 
@@ -158,12 +155,12 @@ lm = rsm.model.regress(
 lm.summary()
 ```
 
-- P-value: Both methods yield a p-value of approximately 0.905
-- Interpretation: There are no significant differences between the treatment and control groups for "mrm2" (months since last donation). This suggests effective randomization, indicating that any observed treatment effects are likely due to the treatment itself rather than pre-existing group differences.
+-   P-value: Both methods yield a p-value of approximately 0.905
+-   Interpretation: There are no significant differences between the treatment and control groups for "mrm2" (months since last donation). This suggests effective randomization, indicating that any observed treatment effects are likely due to the treatment itself rather than pre-existing group differences.
 
 <br>
 
-2. pwhite variable
+2.  pwhite variable
 
 ```{r}
 t.test(pwhite ~ treatment, data = data, conf.level = 0.95)
@@ -181,12 +178,12 @@ lm = rsm.model.regress(
 lm.summary()
 ```
 
-- P-value: Both the t-test and linear regression show a p-value around 0.575.
-- Interpretation: There is no significant difference in the proportion of white individuals between the treatment and control groups, indicating that the randomization was successful in creating comparable groups regarding racial composition.
+-   P-value: Both the t-test and linear regression show a p-value around 0.575.
+-   Interpretation: There is no significant difference in the proportion of white individuals between the treatment and control groups, indicating that the randomization was successful in creating comparable groups regarding racial composition.
 
 <br>
 
-3. female variable
+3.  female variable
 
 ```{r}
 t.test(female ~ treatment, data = data, conf.level = 0.95)
@@ -204,14 +201,14 @@ lm = rsm.model.regress(
 lm.summary()
 ```
 
-- P-value: The t-test has a p-value of 0.07952 and the linear regression also shows a p-value of 0.079.
-- Interpretation: The results suggest a marginal difference in the proportion of females between the treatment and control groups that approaches but does not reach conventional levels of statistical significance (p < 0.05).
+-   P-value: The t-test has a p-value of 0.07952 and the linear regression also shows a p-value of 0.079.
+-   Interpretation: The results suggest a marginal difference in the proportion of females between the treatment and control groups that approaches but does not reach conventional levels of statistical significance (p \< 0.05).
 
 ##### Understanding the T-value and P-value
-- T-value (1.7535): The t-value measures the ratio of the difference between the group means to the standard error of the difference. A t-value of 1.7535 indicates that the difference between the group means (for the proportion of females in treatment versus control) is 1.7535 times the standard error away from zero.
-The sign (+) of the t-value suggests that the mean proportion of females in the treatment group is slightly lower than in the control group, given the negative coefficient in the regression output.
 
-- P-value (0.07952): The p-value tells us the probability of observing a t-value as extreme as 1.7535 (or more) if the null hypothesis were true which was there is no difference in the proportion of females between groups.
+-   T-value (1.7535): The t-value measures the ratio of the difference between the group means to the standard error of the difference. A t-value of 1.7535 indicates that the difference between the group means (for the proportion of females in treatment versus control) is 1.7535 times the standard error away from zero. The sign (+) of the t-value suggests that the mean proportion of females in the treatment group is slightly lower than in the control group, given the negative coefficient in the regression output.
+
+-   P-value (0.07952): The p-value tells us the probability of observing a t-value as extreme as 1.7535 (or more) if the null hypothesis were true which was there is no difference in the proportion of females between groups.
 
 ## Experimental Results
 
@@ -221,37 +218,33 @@ First, I analyze whether matched donations lead to an increased response rate of
 
 #### I'm going to create a bar plot that visualizes the proportion of people who donated, with two separate bars representing the treatment and control groups. This will allow for a clear comparison of the donation rates between the two groups
 
-
 ```{r}
 # Calculate the proportion of donations in the treatment and control groups using dplyr
 plot_data <- data %>%
-  group_by(treatment) %>%
-  summarise(Proportion_Donated = mean(gave == 1, na.rm = TRUE)) %>%
-  mutate(Group = ifelse(treatment == 1, "Treatment", "Control")) %>%
-  select(Group, Proportion_Donated)
+  dplyr::group_by(treatment) %>%
+  dplyr::summarise(Proportion_Donated = mean(gave == 1, na.rm = TRUE)) %>%
+  dplyr::mutate(Group = ifelse(treatment == 1, "Treatment", "Control")) %>%
+  dplyr::select(Group, Proportion_Donated)
 
 # Generate the bar plot using ggplot2
-ggplot(plot_data, aes(x = Group, y = Proportion_Donated, fill = Group)) +
-  geom_bar(stat = "identity", position = "dodge", width = 0.5) +
-  geom_text(aes(label=scales::percent(Proportion_Donated)), vjust=-0.3, size=5) +
-  scale_y_continuous(labels = scales::percent_format()) +
-  labs(y = "Proportion of Donations", title = "Proportion of People Who Donated by Group") +
-  theme_classic() +
-  theme(
+ggplot2::ggplot(plot_data, aes(x = Group, y = Proportion_Donated, fill = Group)) +
+  ggplot2::geom_bar(stat = "identity", position = "dodge", width = 0.5) +
+  ggplot2::geom_text(aes(label=scales::percent(Proportion_Donated)), vjust=-0.3, size=5) +
+  ggplot2::scale_y_continuous(labels = scales::percent_format()) +
+  ggplot2::labs(y = "Proportion of Donations", title = "Proportion of People Who Donated by Group") +
+  ggplot2::theme_classic() +
+  ggplot2::theme(
     plot.title = element_text(hjust = 0.5, size = 22),
     axis.title.y = element_text(size = 20),
     axis.text.x = element_text(size = 20),
     axis.title.x = element_blank(),
     legend.position = "none"
   ) +
-  scale_fill_manual(values = c("Treatment" = "#FF5733", "Control" = "#33C1FF"))
+  ggplot2::scale_fill_manual(values = c("Treatment" = "#FF5733", "Control" = "#33C1FF"))
 
 ```
 
-
-
 #### I'm going to perform a t-test to compare the treatment and control groups based on whether a charitable donation was made. Additionally, I will conduct a linear regression to analyze the same data. After obtaining the statistical outcomes, I will interpret these results in the context of the experiment. Specifically, if the results show a statistically significant difference, I'll discuss what these findings suggest about human behavior towards charitable giving, focusing more on qualitative insights rather than numerical data.
-
 
 ```{r}
 t.test(gave ~ treatment, data = data, var.equal = FALSE)
@@ -290,54 +283,382 @@ print(probit_model.summary())
 
 <br>
 
-- Probit Regression Explained: Probit regression is a type of regression used in statistics to analyze binary (two outcome) variables. In this context, it models the probability that someone made a charitable donation based on whether they were in the treatment group or not.
+-   Probit Regression Explained: Probit regression is a type of regression used in statistics to analyze binary (two outcome) variables. In this context, it models the probability that someone made a charitable donation based on whether they were in the treatment group or not.
 
-Key Elements of the Output: 
+Key Elements of the Output:
 
-- Dependent Variable (gave): This is what we're trying to predict: whether or not someone gave a donation (1 if yes, 0 if no).
+-   Dependent Variable (gave): This is what we're trying to predict: whether or not someone gave a donation (1 if yes, 0 if no).
 
-- Number of Observations (50,083): This is the total number of data points used in the model.
+-   Number of Observations (50,083): This is the total number of data points used in the model.
 
-- Model (Probit): The type of model used, which in this case uses a Probit link function. This function maps any input from minus infinity to infinity to a 0 to 1 range, fitting the binary nature of the dependent variable.
+-   Model (Probit): The type of model used, which in this case uses a Probit link function. This function maps any input from minus infinity to infinity to a 0 to 1 range, fitting the binary nature of the dependent variable.
 
-- MLE (Maximum Likelihood Estimation): This is the method used to fit the model, optimizing to find the parameter values that maximize the likelihood of the data given the model.
+-   MLE (Maximum Likelihood Estimation): This is the method used to fit the model, optimizing to find the parameter values that maximize the likelihood of the data given the model.
 
-- Coefficients: 
-1. const (-2.1001): This is the intercept, or baseline log odds of donating when all predictors are 0 (i.e., not in the treatment group). A negative value indicates a low baseline probability of donation.
-2. treatment (0.0868): This coefficient shows the effect of being in the treatment group. It suggests that being in the treatment group increases the likelihood of donating compared to the control group.
+-   Coefficients:
 
-- Standard Error (std err): These values (0.023 for const and 0.028 for treatment) measure the average distance that the estimated values (coefficients) fall from the actual value. Smaller standard errors suggest more precise estimates.
+1.  const (-2.1001): This is the intercept, or baseline log odds of donating when all predictors are 0 (i.e., not in the treatment group). A negative value indicates a low baseline probability of donation.
+2.  treatment (0.0868): This coefficient shows the effect of being in the treatment group. It suggests that being in the treatment group increases the likelihood of donating compared to the control group.
 
-- Z-value: This is the test statistic used to determine whether to reject the null hypothesis (that the coefficient is zero, implying no effect). For the treatment, a z-value of 3.113 indicates a statistically significant effect.
+-   Standard Error (std err): These values (0.023 for const and 0.028 for treatment) measure the average distance that the estimated values (coefficients) fall from the actual value. Smaller standard errors suggest more precise estimates.
 
-- P-value: For treatment (0.002), this value is very small, indicating strong evidence against the null hypothesis. It suggests that the treatment effect is statistically significant and not due to random chance.
+-   Z-value: This is the test statistic used to determine whether to reject the null hypothesis (that the coefficient is zero, implying no effect). For the treatment, a z-value of 3.113 indicates a statistically significant effect.
 
-- Confidence Interval: For treatment ([0.032, 0.141]), this range gives us a 95% confidence level that the true coefficient falls within this interval. It confirms that the effect is positive and fairly precise.
+-   P-value: For treatment (0.002), this value is very small, indicating strong evidence against the null hypothesis. It suggests that the treatment effect is statistically significant and not due to random chance.
 
+-   Confidence Interval: For treatment (\[0.032, 0.141\]), this range gives us a 95% confidence level that the true coefficient falls within this interval. It confirms that the effect is positive and fairly precise.
 
-
-
-
+<br><br>
 
 ### Differences between Match Rates
 
 Next, I assess the effectiveness of different sizes of matched donations on the response rate.
 
-*todo: Use a series of t-tests to test whether the size of the match ratio has an effect on whether people donate or not. For example, does the 2:1 match rate lead increase the likelihood that someone donates as compared to the 1:1 match rate? Do your results support the "figures suggest" comment the authors make on page 8?*
+#### Now, I will perform a series of t-tests to evaluate whether different match ratios influence the likelihood of making a donation. Specifically, I'll compare the donation rates under a 2:1 match ratio to those under a 1:1 match ratio.
 
-*todo: Assess the same issue using a regression. Specifically, create the variable `ratio1` then regress `gave` on `ratio1`, `ratio2`, and `ratio3` (or alternatively, regress `gave` on the categorical variable `ratio`). Interpret the coefficients and their statistical precision.*
+```{r}
+group_1_1 <- data[data$ratio == 1, "gave"]  # Adjust 'ratio' to the actual column name for 1:1 match
+group_2_1 <- data[data$ratio2 == 1, "gave"] # Adjust 'ratio2' to the actual column name for 2:1 match
 
-*todo: Calculate the response rate difference between the 1:1 and 2:1 match ratios and the 2:1 and 3:1 ratios. Do this directly from the data, and do it by computing the differences in the fitted coefficients of the previous regression. what do you conclude regarding the effectiveness of different sizes of matched donations?*
+# T-test between 1:1 match rate and 2:1 match rate
+t_test_1_1_vs_2_1 <- t.test(group_1_1, group_2_1, alternative = "two.sided", var.equal = TRUE)
+
+t_test_1_1_vs_2_1
+
+
+```
+
+### Interpretation:
+
+- T-value Interpretation: In this context, a t-value of -0.96505 indicates a relatively small difference in donation rates between the two match ratios, which is not statistically significant. 
+
+- P-value Interpretation: The p-value of 0.3345 indicates that there is not a statistically significant difference between the donation rates of the 1:1 and 2:1 match ratios at the conventional 0.05 significance level. This means that the null hypothesis (that there is no difference in means) cannot be rejected based on the data provided.
+
+- Mean Donation Rates: The mean donation rate for the 1:1 match ratio group (mean of x) is approximately 2.07%, and for the 2:1 match ratio group (mean of y), it's approximately 2.26%. Although the 2:1 match ratio shows a higher mean donation rate, the difference is not statistically significant based on the t-test results.
+
+- Confidence Interval: The confidence interval ranges from about -0.57% to +0.19%. Since this interval includes zero, it further supports the conclusion that we cannot assert a significant difference in donation rates between these two groups. The interval suggests that the true difference could range from a slight decrease to a slight increase when moving from a 1:1 to a 2:1 match.
+
+- Conclusion: The analysis does not provide evidence that increasing the match ratio from 1:1 to 2:1 significantly increases the likelihood that someone donates. 
+
+<br><br>
+
+
+#### Now, I'm going to analyze the impact of different match ratios on the likelihood of donations using regression analysis. I'll create a variable called ratio1 and then regress the binary outcome gave on ratio1, ratio2, and ratio3. Alternatively, I could use a single categorical variable ratio to perform the regression. After obtaining the regression coefficients, I will interpret their significance and statistical precision to understand the influence of match ratios on donation behavior.
+
+*Data Preparation*
+
+```{r, include=FALSE}
+data <- data %>%
+  mutate(
+    ratio1 = case_when(
+      ratio == 1 ~ "1:1",
+      ratio2 == 1 ~ "2:1",
+      ratio3 == 1 ~ "3:1",
+      TRUE ~ "No Match"  # This handles any cases where no match ratio is applied
+    ),
+    ratio1 = factor(ratio1)  # Convert to a factor for regression analysis
+  )
+
+```
+
+
+
+
+```{python}
+# Define a function that applies the conditions to create the new `ratio1` values
+def calculate_ratio1(row):
+    if row['ratio'] == 1:
+        return "1:1"
+    elif row['ratio2'] == 1:
+        return "2:1"
+    elif row['ratio3'] == 1:
+        return "3:1"
+    else:
+        return "No Match"
+
+# Apply the function along the rows (axis=1) to create a new 'ratio1' column
+data['ratio1'] = data.apply(calculate_ratio1, axis=1)
+data['ratio1'] = data['ratio1'].astype('category')
+
+```
+
+*Run the logistic regression model*
+
+```{python}
+model = rsm.model.logistic(
+  data = data,
+  rvar = "gave",
+  lev = 1,
+  evar = "ratio1"
+)
+
+model.summary()
+
+```
+
+##### This logistic regression results focus on assessing the impact of different match ratios (1:1, 2:1, 3:1, and no match) on the likelihood of making a donation (gave). Let's discuss and interpret each part of the output:
+
+##### Model Overview
+- Model Type: Logistic regressionw which models the probability of the outcome variable (gave).
+- Response Variable: gave (whether a donation was made, presumably coded as 1 for yes and 0 for no).
+- Explanatory Variables: ratio1, categorized into 1:1, 2:1, 3:1, and No Match.
+
+##### Coefficients and Their Interpretation
+- Intercept (-3.85): This is the log-odds of giving when all explanatory variables are at their baseline level (likely when ratio1[No Match] is the reference category, based on typical coding). The very negative intercept suggests a very low baseline probability of donating when no match is offered.
+- ratio1[2:1] (0.09): Indicates a slight increase in the log odds of donating under the 2:1 match ratio compared to no match, but with a p-value of 0.335, this increase is not statistically significant.
+- ratio1[3:1] (0.09): Similar to the 2:1 match, the 3:1 match shows a minimal effect on the log odds of donating and is also not statistically significant (p-value of 0.31).
+- ratio1[No Match] (-0.15): This coefficient, if the coding were such that another category were the baseline, would suggest a decrease in the likelihood of donating compared to the baseline. 
+
+##### Statistical Precision
+- Standard Errors: Reflect the precision of the estimated coefficients. The larger the standard error, the less precise the estimate. Here, the standard errors are relatively small but not sufficiently so to produce significant results for the 2:1 and 3:1 match ratios.
+- Z-values and P-values: These assess the statistical significance of each coefficient. None of the match ratios shows a p-value under the traditional 0.05 threshold for significance, suggesting that there is no strong evidence that either the 2:1 or 3:1 match ratios significantly increase the likelihood of donating compared to no match.
+
+##### Model Fit and Quality
+- Pseudo R-squared (McFadden): Very low (0.001), indicating that the model does not explain much of the variance in the response variable beyond the baseline model.
+- AUC (0.528): Slightly better than a coin flip, indicating the model has very limited ability to discriminate between those who gave and those who did not based on the match ratio.
+- Chi-squared and its p-value (0.011): While the overall model test suggests some level of significance, the lack of significance in individual predictors and the very low explanatory power suggest that match ratios, as modeled, are not strong predictors of donation behavior.
+
+##### Conclusion
+- The analysis shows that there is no compelling evidence from this logistic regression model that increasing the match ratio from no match to either a 2:1 or a 3:1 ratio significantly increases the probability of making a donation. This finding could suggest that either the size of the match is not sufficiently motivating to change donor behavior, or that other factors not included in the model are more influential in determining whether individuals donate.
+
+
+
+
+<br><br>
+
+#### I need to calculate the response rate differences between the 1:1 and 2:1 match ratios, and also between the 2:1 and 3:1 match ratios. First, I'll determine these differences directly from the dataset. Then, I'll compute the differences using the fitted coefficients from the previous regression analysis. This dual approach will help me draw conclusions about the effectiveness of various match donation sizes in influencing donation behavior.
+
+*Method 1: Direct Calculation from Data*
+
+```{python}
+# Calculate response rates directly from the data
+response_rate_1_1 = data[data['ratio'] == 1]['gave'].mean()
+response_rate_2_1 = data[data['ratio2'] == 1]['gave'].mean()
+response_rate_3_1 = data[data['ratio3'] == 1]['gave'].mean()
+
+# Calculate differences
+difference_1_1_to_2_1 = response_rate_2_1 - response_rate_1_1
+difference_2_1_to_3_1 = response_rate_3_1 - response_rate_2_1
+
+# Print the results
+print(f"Difference in response rate from 1:1 to 2:1: {difference_1_1_to_2_1}")
+print(f"Difference in response rate from 2:1 to 3:1: {difference_2_1_to_3_1}")
+
+```
+
+
+
+```{python}
+# Coefficients from the logistic regression model
+coef_1_1 = 0  # Baseline category (if 1:1 is baseline and not explicitly shown in output)
+coef_2_1 = 0.09  # From the model results for 2:1
+coef_3_1 = 0.09  # From the model results for 3:1
+
+# Calculate differences in log-odds
+log_odds_difference_1_1_to_2_1 = coef_2_1 - coef_1_1
+log_odds_difference_2_1_to_3_1 = coef_3_1 - coef_2_1
+
+# Convert these log-odds differences to probabilities
+probability_difference_1_1_to_2_1 = np.exp(log_odds_difference_1_1_to_2_1) / (1 + np.exp(log_odds_difference_1_1_to_2_1))
+probability_difference_2_1_to_3_1 = np.exp(log_odds_difference_2_1_to_3_1) / (1 + np.exp(log_odds_difference_2_1_to_3_1))
+
+# Print the results
+print(f"Log-odds difference from 1:1 to 2:1: {log_odds_difference_1_1_to_2_1}")
+print(f"Log-odds difference from 2:1 to 3:1: {log_odds_difference_2_1_to_3_1}")
+print(f"Probability difference from 1:1 to 2:1: {probability_difference_1_1_to_2_1}")
+print(f"Probability difference from 2:1 to 3:1: {probability_difference_2_1_to_3_1}")
+
+```
+
+#### Results Summary:
+#### Direct Calculation:
+- 1:1 to 2:1: Minimal increase in response rate by approximately 0.19%.
+- 2:1 to 3:1: Almost no change in response rate, only about 0.01%.
+
+#### Regression Analysis (Log-Odds and Probabilities):
+- 1:1 to 2:1: Log-odds increase of 0.09, translating to a slight probability increase to 52.25%.
+- 2:1 to 3:1: No change in log-odds or probability (remains at 50%).
+
+#### Conclusions (Effectiveness of Match Ratios):
+- Increasing the match ratio from 1:1 to 2:1 shows a slight positive impact on donation likelihood, though the actual increase is modest.
+- No additional benefit is observed when increasing the match ratio from 2:1 to 3:1, suggesting diminishing returns with higher ratios.
+
+#### Implications:
+- While a small increase in match ratio to 2:1 might slightly enhance donation rates, further increases (like to 3:1) do not appear to yield significant additional gains. Fundraising strategies might be better served by focusing on other engagement and motivational tactics beyond just increasing match ratios.
+
+
+
+
+<br><br>
+
+
 
 ### Size of Charitable Contribution
 
 In this subsection, I analyze the effect of the size of matched donation on the size of the charitable contribution.
 
-*todo: Calculate a t-test or run a bivariate linear regression of the donation amount on the treatment status. What do we learn from doing this analysis?*
+#### Now, I'm going to calculate a t-test or conduct a bivariate linear regression to analyze the effect of treatment status on the donation amount. This analysis will help us understand how the treatment influences the actual amounts donated and what implications this might have for understanding donor behavior.
+
+*T-Test*
+
+```{r}
+t_test_result <- t.test(amount ~ treatment, data = data)
+print(t_test_result)
+
+```
+
+```{python}
+lm_result = rsm.model.regress(
+  data = data,
+  rvar = "amount",
+  evar = "treatment"
+)
+
+lm_result.summary()
+
+
+```
+
+#### Welch Two Sample t-test Results:
+- T-value: -1.9183 suggests a negative relationship, but in the context of how groups are coded, it indicates that the treatment group (group 1) has a higher mean donation than the control group (group 0).
+- P-value: 0.05509, which is just above the conventional threshold of 0.05 for statistical significance. 
+- Confidence Interval: Ranges from -0.310 to 0.003. The interval crosses zero, which supports the conclusion that the difference in means is not statistically significant at the 95% confidence level.
+- Sample Estimates: Mean donation amount is 0.813 for the control group and 0.966 for the treatment group.
+
+#### Linear Regression (OLS) Results:
+- Coefficient for Treatment: 0.15, indicating that, holding all else constant, being in the treatment group is associated with an average increase of 0.15 in donation amount compared to the control group.
+- Standard Error: 0.083, leading to a t-value of 1.861.
+- P-value for Treatment: 0.063, again marginally above the 0.05 significance level, similar to the t-test.
+- R-squared: Close to 0, indicating that the model explains almost none of the variability in donation amounts.
+
+#### Interpretation and Conclusion:
+- Both the t-test and the regression analysis suggest that while there appears to be a trend where the treatment group donates more on average than the control group, this difference is not statistically significant at the conventional 5% level. However, the p-values are quite close to the threshold, which might suggest practical significance if not statistical.
+
+#### Practical Implications: 
+- Even though the differences are not statistically significant, the trend towards higher donations in the treatment group could be of interest in practical terms. For example, in large-scale fundraising operations, even small increases in average donations can translate to substantial total increases.
+
+#### Statistical Considerations: 
+- The closeness of the p-values to the threshold of significance suggests that with a slightly larger sample size or a slightly stronger effect, the results might become statistically significant.
+
+
+
+<br><br>
+
 
 *todo: now limit the data to just people who made a donation and repeat the previous analysis. This regression allows you to analyze how much respondents donate conditional on donating some positive amount. Interpret the regression coefficients -- what did we learn? Does the treatment coefficient have a causal interpretation?*
 
+
+#### Now I'm going  to refine the previous analysis by limiting the data to individuals who actually made a donation. Then, I'll repeat the t-test or bivariate linear regression to assess the impact of treatment status on the donation amount among this specific group. This focused regression will help us explore how much donors contribute, conditional on their decision to donate a positive amount. I'll interpret the regression coefficients to extract insights and evaluate whether the treatment coefficient can be considered to have a causal interpretation.
+
+
+*Data Preparation*
+```{r}
+donors <- data %>%
+  filter(gave == 1 & amount > 0)
+
+```
+
+```{python, include = FALSE}
+donors = data[(data['gave'] == 1) & (data['amount'] > 0)]
+
+```
+
+
+*T-Test*
+
+```{r}
+t_test_result <- t.test(amount ~ treatment, data = donors)
+print(t_test_result)
+
+```
+*Regression Model*
+
+```{python}
+lm_result_doners = rsm.model.regress(
+  data = donors,
+  rvar = "amount",
+  evar = "treatment"
+)
+
+lm_result_doners.summary()
+
+```
+
+### T-Test and Linear Regression Results (Limited to Donors):
+
+#### T-Test Results:
+- P-value: 0.05509, indicating that the difference in donation amounts between the treatment and control groups among donors is nearly significant at the conventional 0.05 level.
+- Confidence Interval: Ranges from -0.311 to 0.003, including zero, which supports the lack of significant difference.
+
+#### Linear Regression Results:
+- Treatment Coefficient: 0.15, suggesting that being in the treatment group is associated with an average increase in donation amount by $0.15. 
+- Intercept: The average donation amount in the control group is $0.81, statistically significant as indicated by the p-value < .001.
+
+#### Interpretation and Conclusion:
+- Effect of Treatment: The results imply that while there is a trend towards higher donations among those treated, this is not strong enough to be statistically significant. The average increase of $0.15 in the donation amount due to treatment, although not significant, suggests a potential positive influence of the treatment on donor behavior.
+
+- Causal Interpretation: Given the experimental design, if the treatment assignment was indeed randomized, this regression among donors could still suggest a causal interpretation—treatment might cause a slight increase in donation amounts. 
+
+
+
+<br><br>
+
+
 *todo: Make two plot: one for the treatment group and one for the control. Each plot should be a histogram of the donation amounts only among people who donated. Add a red vertical bar or some other annotation to indicate the sample average for each plot.*
+
+#### Now I'm going to create two histograms, one for the treatment group and one for the control group, displaying the distribution of donation amounts among those who have actually donated. In each plot, I'll include a red vertical bar or a similar annotation to mark the sample average. This visualization will help illustrate how donation behaviors differ between the two groups and highlight the average donation amount for each.
+
+```{r}
+# Filter data to include only those who donated
+donors <- data[data$amount > 0, ]
+
+# Separate treatment and control groups
+treatment_data <- donors[donors$treatment == 1, ]
+control_data <- donors[donors$treatment == 0, ]
+
+# Create histograms
+# Treatment Group
+p1 <- ggplot(treatment_data, aes(x = amount)) +
+  geom_histogram(bins = 30, fill = "skyblue", color = "black") +
+  geom_vline(aes(xintercept = mean(amount)), color = "red", linetype = "dashed", size = 1) +
+  ggtitle("Treatment Group Donation Amounts") +
+  xlab("Donation Amount") +
+  ylab("Frequency") +
+  theme_classic()
+
+# Control Group
+p2 <- ggplot(control_data, aes(x = amount)) +
+  geom_histogram(bins = 30, fill = "lightgreen", color = "black") +
+  geom_vline(aes(xintercept = mean(amount)), color = "red", linetype = "dashed", size = 1) +
+  ggtitle("Control Group Donation Amounts") +
+  xlab("Donation Amount") +
+  ylab("Frequency") +
+  theme_classic()
+
+# Print the plots
+print(p1)
+print(p2)
+
+```
+
+
+
+#### Treatment Group Histogram:
+- Distribution: The frequency of donations is skewed to the right, where smaller donations are more common.
+- Average Donation: The red line here also shows the average donation amount, which again is on the lower end, confirming that most donations are smaller.
+
+#### Control Group Histogram:
+- Distribution: The frequency of donations is skewed to the right, meaning most donations are small amounts, with fewer large donations.
+- Average Donation: The red line indicates where the average donation amount falls, which is relatively low compared to the full range of donations, affirming the skewness towards smaller amounts.
+
+#### Simple Interpretation:
+- Both groups, on average, tend to give smaller amounts, with a few larger donations being less common. 
+
+
+
+<br><br>
+
+
 
 ## Simulation Experiment
 
