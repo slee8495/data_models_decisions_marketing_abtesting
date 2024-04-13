@@ -668,10 +668,117 @@ Suppose the true distribution of respondents who do not get a charitable donatio
 
 Further suppose that the true distribution of respondents who do get a charitable donation match of any size is Bernoulli with probability p=0.022 that a donation is made.
 
+<br><br>
+
 ### Law of Large Numbers
 
-*to do: Make a plot like those on slide 43 from our first class and explain the plot to the reader. To do this, you will simulate 100,00 draws from the control distribution and 10,000 draws from the treatment distribution. You'll then calculate a vector of 10,000 differences, and then you'll plot the cumulative average of that vector of differences. Comment on whether the cumulative average approaches the true difference in means.*
+#### I'll simulate 100,000 draws from the control distribution and 10,000 draws from the treatment distribution. Then, I’ll calculate a vector of 10,000 differences between these distributions. I’ll plot the cumulative average of this vector of differences. This visualization will allow us to observe whether the cumulative average converges towards the true difference in means between the treatment and control groups, and I'll provide commentary on these findings
+
+
+```{r}
+# Calculate the mean and standard deviation for treatment and control
+control_mean <- mean(data$control, na.rm = TRUE)
+control_sd <- sd(data$control, na.rm = TRUE)
+treatment_mean <- mean(data$treatment, na.rm = TRUE)
+treatment_sd <- sd(data$treatment, na.rm = TRUE)
+
+# Simulate 100,000 draws from the control distribution and 10,000 from the treatment
+set.seed(123)  # For reproducibility
+control_draws <- rnorm(100000, control_mean, control_sd)
+treatment_draws <- rnorm(10000, treatment_mean, treatment_sd)
+
+# Calculate the differences
+differences <- sapply(1:10000, function(i) treatment_draws[i] - sample(control_draws, 1))
+
+# Calculate cumulative average
+cumulative_avg <- cumsum(differences) / seq_along(differences)
+
+# Create a dataframe for plotting
+df <- data.frame(Draw = 1:10000, CumulativeAverage = cumulative_avg)
+
+# Plot with ggplot2
+p <- ggplot2::ggplot(df, aes(x = Draw, y = CumulativeAverage)) +
+  ggplot2::geom_line() +
+  ggplot2::geom_hline(yintercept = mean(differences), color = 'red', linetype = 'dashed') +
+  ggplot2::labs(title = 'Cumulative Average Difference Between Treatment and Control',
+       x = 'Number of Draws',
+       y = 'Cumulative Average Difference') +
+  ggplot2::theme_classic()
+
+print(p)
+
+```
+
+#### This plot shows the cumulative average difference in donation amounts between the treatment and control groups across a number of simulated draws. Here’s a simple explanation of what it represents:
+
+- Y Axis (Cumulative Average Difference): This axis shows the average difference in donations between the treatment and control groups, calculated cumulatively.
+- X Axis (Number of Draws): This represents the number of simulated differences that have been averaged together at each point on the plot.
+- Red Dashed Line: This line represents the true difference in means between the treatment and control groups as calculated from the simulated data.
+- Black Line: This represents the cumulative average of the differences with each additional draw.
+At the beginning, the cumulative average fluctuates significantly due to the small sample size. However, as more draws are added (moving right along the horizontal axis), the cumulative average begins to stabilize and converges toward the true difference indicated by the red dashed line.
+
+- The convergence of the black line toward the red dashed line suggests that with enough data, the sample estimate (cumulative average of the simulated differences) approaches the actual difference between the groups. This illustrates the law of large numbers, which states that as the number of trials increases, the average of the results should get closer to the expected value (the true difference in this case).
+
+
+<br><br>
 
 ### Central Limit Theorem
 
-*to do: Make 4 histograms like those on slide 44 from our first class at sample sizes 50, 200, 500, and 1000 and explain these plots to the reader. To do this for a sample size of e.g. 50, take 50 draws from each of the control and treatment distributions, and calculate the average difference between those draws. Then repeat that process 999 more times so that you have 1000 averages. Plot the histogram of those averages. Comment on whether zero is in the "middle" of the distribution or whether it's in the "tail."*
+#### Finally, I'm going to produce four histograms, corresponding to sample sizes of 50, 200, 500, and 1000. For each histogram, I’ll start by taking the specified number of draws from both the control and treatment distributions. I'll calculate the average difference between these draws. This process will be repeated 999 times to accumulate 1000 average differences. 
+
+```{r}
+# Function to create data for histograms
+create_hist_data <- function(data, sample_size, num_samples) {
+  replicate(num_samples, {
+    sample_control <- sample(data$control, sample_size, replace = TRUE)
+    sample_treatment <- sample(data$treatment, sample_size, replace = TRUE)
+    mean(sample_treatment) - mean(sample_control)
+  })
+}
+
+# Create histogram data for different sample sizes
+set.seed(123) # for reproducibility
+hist_data_50 <- create_hist_data(data, 50, 1000)
+hist_data_200 <- create_hist_data(data, 200, 1000)
+hist_data_500 <- create_hist_data(data, 500, 1000)
+hist_data_1000 <- create_hist_data(data, 1000, 1000)
+
+# Combine all histogram data into a single dataframe
+hist_data <- data.frame(
+  AverageDifference = c(hist_data_50, hist_data_200, hist_data_500, hist_data_1000),
+  SampleSize = factor(rep(c(50, 200, 500, 1000), each = 1000))
+)
+
+
+ggplot2::ggplot(hist_data, aes(x = AverageDifference, fill = SampleSize)) +
+  ggplot2::geom_histogram(data = subset(hist_data, SampleSize %in% c(50, 200)), 
+                 bins = 30, position = 'identity', alpha = 0.3) +
+  ggplot2::geom_histogram(data = subset(hist_data, SampleSize %in% c(500, 1000)), 
+                 bins = 30, position = 'identity', alpha = 0.3) +
+  ggplot2::scale_fill_manual(values = c("red", "blue", "green", "purple")) +
+  ggplot2::geom_vline(xintercept = 0, color = "red", linetype = "dashed") +
+  ggplot2::labs(x = "Average Difference", y = "Frequency", fill = "Sample Size") +
+  ggplot2::theme_classic() +
+  ggplot2::theme(legend.position = "bottom") +
+  ggplot2::coord_flip()
+
+
+```
+
+*Plot Interpretation*
+- Sample Size 50 (Red): The distribution is wide, suggesting that smaller sample sizes yield more variability in the average difference. The average differences are spread out, which indicates less precision in the estimate of the true effect.
+
+- Sample Size 200 (Blue): The distribution begins to narrow compared to the sample size of 50. This indicates that increasing the sample size reduces variability and provides a more precise estimate of the average difference.
+
+- Sample Size 500 (Green): The distribution narrows even further, showing even greater precision in the estimate of the average difference. The height of the distribution is increasing, indicating that more sample averages are concentrated around a specific range.
+
+- Sample Size 1000 (Purple): This distribution is the narrowest, suggesting that the largest sample size provides the most precise estimate of the average difference. The tall and narrow shape indicates that the sample averages are highly concentrated, and the variability of the difference estimate is the lowest.
+
+<br><br>
+
+## Conclusion
+#### Throughout this analysis, I tackled into the efficacy of various fundraising strategies, employing rigorous statistical techniques to explore the dynamics between control and treatment groups within a charitable donation context. The investigation here revealed that while increasing the match ratio has a slight positive impact on donation rates, this effect does not escalate with higher ratios, suggesting a point of diminishing returns. Additionally, the findings suggest that treatment may modestly increase donation amounts, albeit not at a statistically significant level. Simulations further demonstrated the Law of Large Numbers and the Central Limit Theorem, reinforcing the reliability of our statistical inferences. Ultimately, this analysis provides valuable insights into donor behavior, indicating that while strategic tweaks can enhance fundraising outcomes, there is a threshold beyond which their effectiveness plateaus. This study's nuanced conclusions contribute to optimizing fundraising techniques, ensuring resources are directed towards the most impactful strategies.
+
+
+
+

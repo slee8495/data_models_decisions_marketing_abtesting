@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Sangho Lee">
-<meta name="dcterms.date" content="2024-04-12">
+<meta name="dcterms.date" content="2024-04-13">
 
 <title>A Replication of Karlan and List (2007)</title>
 <style>
@@ -98,7 +98,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">April 12, 2024</p>
+      <p class="date">April 13, 2024</p>
     </div>
   </div>
   
@@ -1309,8 +1309,8 @@ Nr obs: 50,083</code></pre>
 Dep. Variable:                   gave   No. Observations:                50083
 Model:                         Probit   Df Residuals:                    50081
 Method:                           MLE   Df Model:                            1
-Date:                Fri, 12 Apr 2024   Pseudo R-squ.:               0.0009783
-Time:                        21:46:55   Log-Likelihood:                -5030.5
+Date:                Sat, 13 Apr 2024   Pseudo R-squ.:               0.0009783
+Time:                        02:04:27   Log-Likelihood:                -5030.5
 converged:                       True   LL-Null:                       -5035.4
 Covariance Type:            nonrobust   LLR p-value:                  0.001696
 ==============================================================================
@@ -1818,13 +1818,124 @@ Nr obs: 1,034</code></pre>
 <p>As a reminder of how the t-statistic “works,” in this section I use simulation to demonstrate the Law of Large Numbers and the Central Limit Theorem.</p>
 <p>Suppose the true distribution of respondents who do not get a charitable donation match is Bernoulli with probability p=0.018 that a donation is made.</p>
 <p>Further suppose that the true distribution of respondents who do get a charitable donation match of any size is Bernoulli with probability p=0.022 that a donation is made.</p>
+<p><br><br></p>
 <section id="law-of-large-numbers" class="level3">
 <h3 class="anchored" data-anchor-id="law-of-large-numbers">Law of Large Numbers</h3>
-<p><em>to do: Make a plot like those on slide 43 from our first class and explain the plot to the reader. To do this, you will simulate 100,00 draws from the control distribution and 10,000 draws from the treatment distribution. You’ll then calculate a vector of 10,000 differences, and then you’ll plot the cumulative average of that vector of differences. Comment on whether the cumulative average approaches the true difference in means.</em></p>
+<section id="ill-simulate-100000-draws-from-the-control-distribution-and-10000-draws-from-the-treatment-distribution.-then-ill-calculate-a-vector-of-10000-differences-between-these-distributions.-ill-plot-the-cumulative-average-of-this-vector-of-differences.-this-visualization-will-allow-us-to-observe-whether-the-cumulative-average-converges-towards-the-true-difference-in-means-between-the-treatment-and-control-groups-and-ill-provide-commentary-on-these-findings" class="level4">
+<h4 class="anchored" data-anchor-id="ill-simulate-100000-draws-from-the-control-distribution-and-10000-draws-from-the-treatment-distribution.-then-ill-calculate-a-vector-of-10000-differences-between-these-distributions.-ill-plot-the-cumulative-average-of-this-vector-of-differences.-this-visualization-will-allow-us-to-observe-whether-the-cumulative-average-converges-towards-the-true-difference-in-means-between-the-treatment-and-control-groups-and-ill-provide-commentary-on-these-findings">I’ll simulate 100,000 draws from the control distribution and 10,000 draws from the treatment distribution. Then, I’ll calculate a vector of 10,000 differences between these distributions. I’ll plot the cumulative average of this vector of differences. This visualization will allow us to observe whether the cumulative average converges towards the true difference in means between the treatment and control groups, and I’ll provide commentary on these findings</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the mean and standard deviation for treatment and control</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>control_mean <span class="ot">&lt;-</span> <span class="fu">mean</span>(data<span class="sc">$</span>control, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>control_sd <span class="ot">&lt;-</span> <span class="fu">sd</span>(data<span class="sc">$</span>control, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>treatment_mean <span class="ot">&lt;-</span> <span class="fu">mean</span>(data<span class="sc">$</span>treatment, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>treatment_sd <span class="ot">&lt;-</span> <span class="fu">sd</span>(data<span class="sc">$</span>treatment, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Simulate 100,000 draws from the control distribution and 10,000 from the treatment</span></span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)  <span class="co"># For reproducibility</span></span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a>control_draws <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">100000</span>, control_mean, control_sd)</span>
+<span id="cb55-10"><a href="#cb55-10" aria-hidden="true" tabindex="-1"></a>treatment_draws <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">10000</span>, treatment_mean, treatment_sd)</span>
+<span id="cb55-11"><a href="#cb55-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-12"><a href="#cb55-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the differences</span></span>
+<span id="cb55-13"><a href="#cb55-13" aria-hidden="true" tabindex="-1"></a>differences <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10000</span>, <span class="cf">function</span>(i) treatment_draws[i] <span class="sc">-</span> <span class="fu">sample</span>(control_draws, <span class="dv">1</span>))</span>
+<span id="cb55-14"><a href="#cb55-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-15"><a href="#cb55-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate cumulative average</span></span>
+<span id="cb55-16"><a href="#cb55-16" aria-hidden="true" tabindex="-1"></a>cumulative_avg <span class="ot">&lt;-</span> <span class="fu">cumsum</span>(differences) <span class="sc">/</span> <span class="fu">seq_along</span>(differences)</span>
+<span id="cb55-17"><a href="#cb55-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-18"><a href="#cb55-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a dataframe for plotting</span></span>
+<span id="cb55-19"><a href="#cb55-19" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Draw =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10000</span>, <span class="at">CumulativeAverage =</span> cumulative_avg)</span>
+<span id="cb55-20"><a href="#cb55-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-21"><a href="#cb55-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot with ggplot2</span></span>
+<span id="cb55-22"><a href="#cb55-22" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> ggplot2<span class="sc">::</span><span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> Draw, <span class="at">y =</span> CumulativeAverage)) <span class="sc">+</span></span>
+<span id="cb55-23"><a href="#cb55-23" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb55-24"><a href="#cb55-24" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="fu">mean</span>(differences), <span class="at">color =</span> <span class="st">'red'</span>, <span class="at">linetype =</span> <span class="st">'dashed'</span>) <span class="sc">+</span></span>
+<span id="cb55-25"><a href="#cb55-25" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">labs</span>(<span class="at">title =</span> <span class="st">'Cumulative Average Difference Between Treatment and Control'</span>,</span>
+<span id="cb55-26"><a href="#cb55-26" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">'Number of Draws'</span>,</span>
+<span id="cb55-27"><a href="#cb55-27" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">'Cumulative Average Difference'</span>) <span class="sc">+</span></span>
+<span id="cb55-28"><a href="#cb55-28" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme_classic</span>()</span>
+<span id="cb55-29"><a href="#cb55-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-30"><a href="#cb55-30" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hw1_questions_files/figure-html/unnamed-chunk-29-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="this-plot-shows-the-cumulative-average-difference-in-donation-amounts-between-the-treatment-and-control-groups-across-a-number-of-simulated-draws.-heres-a-simple-explanation-of-what-it-represents" class="level4">
+<h4 class="anchored" data-anchor-id="this-plot-shows-the-cumulative-average-difference-in-donation-amounts-between-the-treatment-and-control-groups-across-a-number-of-simulated-draws.-heres-a-simple-explanation-of-what-it-represents">This plot shows the cumulative average difference in donation amounts between the treatment and control groups across a number of simulated draws. Here’s a simple explanation of what it represents:</h4>
+<ul>
+<li><p>Y Axis (Cumulative Average Difference): This axis shows the average difference in donations between the treatment and control groups, calculated cumulatively.</p></li>
+<li><p>X Axis (Number of Draws): This represents the number of simulated differences that have been averaged together at each point on the plot.</p></li>
+<li><p>Red Dashed Line: This line represents the true difference in means between the treatment and control groups as calculated from the simulated data.</p></li>
+<li><p>Black Line: This represents the cumulative average of the differences with each additional draw. At the beginning, the cumulative average fluctuates significantly due to the small sample size. However, as more draws are added (moving right along the horizontal axis), the cumulative average begins to stabilize and converges toward the true difference indicated by the red dashed line.</p></li>
+<li><p>The convergence of the black line toward the red dashed line suggests that with enough data, the sample estimate (cumulative average of the simulated differences) approaches the actual difference between the groups. This illustrates the law of large numbers, which states that as the number of trials increases, the average of the results should get closer to the expected value (the true difference in this case).</p></li>
+</ul>
+<p><br><br></p>
+</section>
 </section>
 <section id="central-limit-theorem" class="level3">
 <h3 class="anchored" data-anchor-id="central-limit-theorem">Central Limit Theorem</h3>
-<p><em>to do: Make 4 histograms like those on slide 44 from our first class at sample sizes 50, 200, 500, and 1000 and explain these plots to the reader. To do this for a sample size of e.g.&nbsp;50, take 50 draws from each of the control and treatment distributions, and calculate the average difference between those draws. Then repeat that process 999 more times so that you have 1000 averages. Plot the histogram of those averages. Comment on whether zero is in the “middle” of the distribution or whether it’s in the “tail.”</em></p>
+<section id="finally-im-going-to-produce-four-histograms-corresponding-to-sample-sizes-of-50-200-500-and-1000.-for-each-histogram-ill-start-by-taking-the-specified-number-of-draws-from-both-the-control-and-treatment-distributions.-ill-calculate-the-average-difference-between-these-draws.-this-process-will-be-repeated-999-times-to-accumulate-1000-average-differences." class="level4">
+<h4 class="anchored" data-anchor-id="finally-im-going-to-produce-four-histograms-corresponding-to-sample-sizes-of-50-200-500-and-1000.-for-each-histogram-ill-start-by-taking-the-specified-number-of-draws-from-both-the-control-and-treatment-distributions.-ill-calculate-the-average-difference-between-these-draws.-this-process-will-be-repeated-999-times-to-accumulate-1000-average-differences.">Finally, I’m going to produce four histograms, corresponding to sample sizes of 50, 200, 500, and 1000. For each histogram, I’ll start by taking the specified number of draws from both the control and treatment distributions. I’ll calculate the average difference between these draws. This process will be repeated 999 times to accumulate 1000 average differences.</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Function to create data for histograms</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>create_hist_data <span class="ot">&lt;-</span> <span class="cf">function</span>(data, sample_size, num_samples) {</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">replicate</span>(num_samples, {</span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>    sample_control <span class="ot">&lt;-</span> <span class="fu">sample</span>(data<span class="sc">$</span>control, sample_size, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>    sample_treatment <span class="ot">&lt;-</span> <span class="fu">sample</span>(data<span class="sc">$</span>treatment, sample_size, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mean</span>(sample_treatment) <span class="sc">-</span> <span class="fu">mean</span>(sample_control)</span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-10"><a href="#cb56-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Create histogram data for different sample sizes</span></span>
+<span id="cb56-11"><a href="#cb56-11" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>) <span class="co"># for reproducibility</span></span>
+<span id="cb56-12"><a href="#cb56-12" aria-hidden="true" tabindex="-1"></a>hist_data_50 <span class="ot">&lt;-</span> <span class="fu">create_hist_data</span>(data, <span class="dv">50</span>, <span class="dv">1000</span>)</span>
+<span id="cb56-13"><a href="#cb56-13" aria-hidden="true" tabindex="-1"></a>hist_data_200 <span class="ot">&lt;-</span> <span class="fu">create_hist_data</span>(data, <span class="dv">200</span>, <span class="dv">1000</span>)</span>
+<span id="cb56-14"><a href="#cb56-14" aria-hidden="true" tabindex="-1"></a>hist_data_500 <span class="ot">&lt;-</span> <span class="fu">create_hist_data</span>(data, <span class="dv">500</span>, <span class="dv">1000</span>)</span>
+<span id="cb56-15"><a href="#cb56-15" aria-hidden="true" tabindex="-1"></a>hist_data_1000 <span class="ot">&lt;-</span> <span class="fu">create_hist_data</span>(data, <span class="dv">1000</span>, <span class="dv">1000</span>)</span>
+<span id="cb56-16"><a href="#cb56-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-17"><a href="#cb56-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine all histogram data into a single dataframe</span></span>
+<span id="cb56-18"><a href="#cb56-18" aria-hidden="true" tabindex="-1"></a>hist_data <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb56-19"><a href="#cb56-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">AverageDifference =</span> <span class="fu">c</span>(hist_data_50, hist_data_200, hist_data_500, hist_data_1000),</span>
+<span id="cb56-20"><a href="#cb56-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">SampleSize =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="dv">50</span>, <span class="dv">200</span>, <span class="dv">500</span>, <span class="dv">1000</span>), <span class="at">each =</span> <span class="dv">1000</span>))</span>
+<span id="cb56-21"><a href="#cb56-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb56-22"><a href="#cb56-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-23"><a href="#cb56-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-24"><a href="#cb56-24" aria-hidden="true" tabindex="-1"></a>ggplot2<span class="sc">::</span><span class="fu">ggplot</span>(hist_data, <span class="fu">aes</span>(<span class="at">x =</span> AverageDifference, <span class="at">fill =</span> SampleSize)) <span class="sc">+</span></span>
+<span id="cb56-25"><a href="#cb56-25" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_histogram</span>(<span class="at">data =</span> <span class="fu">subset</span>(hist_data, SampleSize <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">50</span>, <span class="dv">200</span>)), </span>
+<span id="cb56-26"><a href="#cb56-26" aria-hidden="true" tabindex="-1"></a>                 <span class="at">bins =</span> <span class="dv">30</span>, <span class="at">position =</span> <span class="st">'identity'</span>, <span class="at">alpha =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
+<span id="cb56-27"><a href="#cb56-27" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_histogram</span>(<span class="at">data =</span> <span class="fu">subset</span>(hist_data, SampleSize <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">500</span>, <span class="dv">1000</span>)), </span>
+<span id="cb56-28"><a href="#cb56-28" aria-hidden="true" tabindex="-1"></a>                 <span class="at">bins =</span> <span class="dv">30</span>, <span class="at">position =</span> <span class="st">'identity'</span>, <span class="at">alpha =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
+<span id="cb56-29"><a href="#cb56-29" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"red"</span>, <span class="st">"blue"</span>, <span class="st">"green"</span>, <span class="st">"purple"</span>)) <span class="sc">+</span></span>
+<span id="cb56-30"><a href="#cb56-30" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">color =</span> <span class="st">"red"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb56-31"><a href="#cb56-31" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Average Difference"</span>, <span class="at">y =</span> <span class="st">"Frequency"</span>, <span class="at">fill =</span> <span class="st">"Sample Size"</span>) <span class="sc">+</span></span>
+<span id="cb56-32"><a href="#cb56-32" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme_classic</span>() <span class="sc">+</span></span>
+<span id="cb56-33"><a href="#cb56-33" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>) <span class="sc">+</span></span>
+<span id="cb56-34"><a href="#cb56-34" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">coord_flip</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hw1_questions_files/figure-html/unnamed-chunk-30-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><em>Plot Interpretation</em> - Sample Size 50 (Red): The distribution is wide, suggesting that smaller sample sizes yield more variability in the average difference. The average differences are spread out, which indicates less precision in the estimate of the true effect.</p>
+<ul>
+<li><p>Sample Size 200 (Blue): The distribution begins to narrow compared to the sample size of 50. This indicates that increasing the sample size reduces variability and provides a more precise estimate of the average difference.</p></li>
+<li><p>Sample Size 500 (Green): The distribution narrows even further, showing even greater precision in the estimate of the average difference. The height of the distribution is increasing, indicating that more sample averages are concentrated around a specific range.</p></li>
+<li><p>Sample Size 1000 (Purple): This distribution is the narrowest, suggesting that the largest sample size provides the most precise estimate of the average difference. The tall and narrow shape indicates that the sample averages are highly concentrated, and the variability of the difference estimate is the lowest.</p></li>
+</ul>
+<p><br><br></p>
+</section>
+</section>
+</section>
+<section id="conclusion-1" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion-1">Conclusion</h2>
+<section id="throughout-this-analysis-i-tackled-into-the-efficacy-of-various-fundraising-strategies-employing-rigorous-statistical-techniques-to-explore-the-dynamics-between-control-and-treatment-groups-within-a-charitable-donation-context.-the-investigation-here-revealed-that-while-increasing-the-match-ratio-has-a-slight-positive-impact-on-donation-rates-this-effect-does-not-escalate-with-higher-ratios-suggesting-a-point-of-diminishing-returns.-additionally-the-findings-suggest-that-treatment-may-modestly-increase-donation-amounts-albeit-not-at-a-statistically-significant-level.-simulations-further-demonstrated-the-law-of-large-numbers-and-the-central-limit-theorem-reinforcing-the-reliability-of-our-statistical-inferences.-ultimately-this-analysis-provides-valuable-insights-into-donor-behavior-indicating-that-while-strategic-tweaks-can-enhance-fundraising-outcomes-there-is-a-threshold-beyond-which-their-effectiveness-plateaus.-this-studys-nuanced-conclusions-contribute-to-optimizing-fundraising-techniques-ensuring-resources-are-directed-towards-the-most-impactful-strategies." class="level4">
+<h4 class="anchored" data-anchor-id="throughout-this-analysis-i-tackled-into-the-efficacy-of-various-fundraising-strategies-employing-rigorous-statistical-techniques-to-explore-the-dynamics-between-control-and-treatment-groups-within-a-charitable-donation-context.-the-investigation-here-revealed-that-while-increasing-the-match-ratio-has-a-slight-positive-impact-on-donation-rates-this-effect-does-not-escalate-with-higher-ratios-suggesting-a-point-of-diminishing-returns.-additionally-the-findings-suggest-that-treatment-may-modestly-increase-donation-amounts-albeit-not-at-a-statistically-significant-level.-simulations-further-demonstrated-the-law-of-large-numbers-and-the-central-limit-theorem-reinforcing-the-reliability-of-our-statistical-inferences.-ultimately-this-analysis-provides-valuable-insights-into-donor-behavior-indicating-that-while-strategic-tweaks-can-enhance-fundraising-outcomes-there-is-a-threshold-beyond-which-their-effectiveness-plateaus.-this-studys-nuanced-conclusions-contribute-to-optimizing-fundraising-techniques-ensuring-resources-are-directed-towards-the-most-impactful-strategies.">Throughout this analysis, I tackled into the efficacy of various fundraising strategies, employing rigorous statistical techniques to explore the dynamics between control and treatment groups within a charitable donation context. The investigation here revealed that while increasing the match ratio has a slight positive impact on donation rates, this effect does not escalate with higher ratios, suggesting a point of diminishing returns. Additionally, the findings suggest that treatment may modestly increase donation amounts, albeit not at a statistically significant level. Simulations further demonstrated the Law of Large Numbers and the Central Limit Theorem, reinforcing the reliability of our statistical inferences. Ultimately, this analysis provides valuable insights into donor behavior, indicating that while strategic tweaks can enhance fundraising outcomes, there is a threshold beyond which their effectiveness plateaus. This study’s nuanced conclusions contribute to optimizing fundraising techniques, ensuring resources are directed towards the most impactful strategies.</h4>
 </section>
 </section>
 
