@@ -219,14 +219,12 @@ First, I analyze whether matched donations lead to an increased response rate of
 #### I'm going to create a bar plot that visualizes the proportion of people who donated, with two separate bars representing the treatment and control groups. This will allow for a clear comparison of the donation rates between the two groups
 
 ```{r}
-# Calculate the proportion of donations in the treatment and control groups using dplyr
 plot_data <- data %>%
   dplyr::group_by(treatment) %>%
   dplyr::summarise(Proportion_Donated = mean(gave == 1, na.rm = TRUE)) %>%
   dplyr::mutate(Group = ifelse(treatment == 1, "Treatment", "Control")) %>%
   dplyr::select(Group, Proportion_Donated)
 
-# Generate the bar plot using ggplot2
 ggplot2::ggplot(plot_data, aes(x = Group, y = Proportion_Donated, fill = Group)) +
   ggplot2::geom_bar(stat = "identity", position = "dodge", width = 0.5) +
   ggplot2::geom_text(aes(label=scales::percent(Proportion_Donated)), vjust=-0.3, size=5) +
@@ -270,14 +268,12 @@ lm.summary()
 
 ```{python}
 # Create the dependent and independent variables
-X = data[['treatment']]  # independent variable
-X = sm.add_constant(X)  # adding a constant
-y = data['gave']  # dependent variable
+X = data[['treatment']]  
+X = sm.add_constant(X)  
+y = data['gave']  
 
 # Fit a probit model
 probit_model = sm.Probit(y, X).fit()
-
-# Print the summary of the model
 print(probit_model.summary())
 ```
 
@@ -317,8 +313,8 @@ Next, I assess the effectiveness of different sizes of matched donations on the 
 #### Now, I will perform a series of t-tests to evaluate whether different match ratios influence the likelihood of making a donation. Specifically, I'll compare the donation rates under a 2:1 match ratio to those under a 1:1 match ratio.
 
 ```{r}
-group_1_1 <- data[data$ratio == 1, "gave"]  # Adjust 'ratio' to the actual column name for 1:1 match
-group_2_1 <- data[data$ratio2 == 1, "gave"] # Adjust 'ratio2' to the actual column name for 2:1 match
+group_1_1 <- data[data$ratio == 1, "gave"] 
+group_2_1 <- data[data$ratio2 == 1, "gave"] 
 
 # T-test between 1:1 match rate and 2:1 match rate
 t_test_1_1_vs_2_1 <- t.test(group_1_1, group_2_1, alternative = "two.sided", var.equal = TRUE)
@@ -354,9 +350,9 @@ data <- data %>%
       ratio == 1 ~ "1:1",
       ratio2 == 1 ~ "2:1",
       ratio3 == 1 ~ "3:1",
-      TRUE ~ "No Match"  # This handles any cases where no match ratio is applied
+      TRUE ~ "No Match" 
     ),
-    ratio1 = factor(ratio1)  # Convert to a factor for regression analysis
+    ratio1 = factor(ratio1)  
   )
 
 ```
@@ -440,7 +436,6 @@ response_rate_3_1 = data[data['ratio3'] == 1]['gave'].mean()
 difference_1_1_to_2_1 = response_rate_2_1 - response_rate_1_1
 difference_2_1_to_3_1 = response_rate_3_1 - response_rate_2_1
 
-# Print the results
 print(f"Difference in response rate from 1:1 to 2:1: {difference_1_1_to_2_1}")
 print(f"Difference in response rate from 2:1 to 3:1: {difference_2_1_to_3_1}")
 
@@ -450,9 +445,9 @@ print(f"Difference in response rate from 2:1 to 3:1: {difference_2_1_to_3_1}")
 
 ```{python}
 # Coefficients from the logistic regression model
-coef_1_1 = 0  # Baseline category (if 1:1 is baseline and not explicitly shown in output)
-coef_2_1 = 0.09  # From the model results for 2:1
-coef_3_1 = 0.09  # From the model results for 3:1
+coef_1_1 = 0  
+coef_2_1 = 0.09  
+coef_3_1 = 0.09 
 
 # Calculate differences in log-odds
 log_odds_difference_1_1_to_2_1 = coef_2_1 - coef_1_1
@@ -462,7 +457,6 @@ log_odds_difference_2_1_to_3_1 = coef_3_1 - coef_2_1
 probability_difference_1_1_to_2_1 = np.exp(log_odds_difference_1_1_to_2_1) / (1 + np.exp(log_odds_difference_1_1_to_2_1))
 probability_difference_2_1_to_3_1 = np.exp(log_odds_difference_2_1_to_3_1) / (1 + np.exp(log_odds_difference_2_1_to_3_1))
 
-# Print the results
 print(f"Log-odds difference from 1:1 to 2:1: {log_odds_difference_1_1_to_2_1}")
 print(f"Log-odds difference from 2:1 to 3:1: {log_odds_difference_2_1_to_3_1}")
 print(f"Probability difference from 1:1 to 2:1: {probability_difference_1_1_to_2_1}")
@@ -544,10 +538,6 @@ lm_result.summary()
 
 <br><br>
 
-
-*todo: now limit the data to just people who made a donation and repeat the previous analysis. This regression allows you to analyze how much respondents donate conditional on donating some positive amount. Interpret the regression coefficients -- what did we learn? Does the treatment coefficient have a causal interpretation?*
-
-
 #### Now I'm going  to refine the previous analysis by limiting the data to individuals who actually made a donation. Then, I'll repeat the t-test or bivariate linear regression to assess the impact of treatment status on the donation amount among this specific group. This focused regression will help us explore how much donors contribute, conditional on their decision to donate a positive amount. I'll interpret the regression coefficients to extract insights and evaluate whether the treatment coefficient can be considered to have a causal interpretation.
 
 
@@ -603,20 +593,14 @@ lm_result_doners.summary()
 
 <br><br>
 
-
-*todo: Make two plot: one for the treatment group and one for the control. Each plot should be a histogram of the donation amounts only among people who donated. Add a red vertical bar or some other annotation to indicate the sample average for each plot.*
-
 #### Now I'm going to create two histograms, one for the treatment group and one for the control group, displaying the distribution of donation amounts among those who have actually donated. In each plot, I'll include a red vertical bar or a similar annotation to mark the sample average. This visualization will help illustrate how donation behaviors differ between the two groups and highlight the average donation amount for each.
 
 ```{r}
-# Filter data to include only those who donated
 donors <- data[data$amount > 0, ]
 
-# Separate treatment and control groups
 treatment_data <- donors[donors$treatment == 1, ]
 control_data <- donors[donors$treatment == 0, ]
 
-# Create histograms
 # Treatment Group
 p1 <- ggplot(treatment_data, aes(x = amount)) +
   geom_histogram(bins = 30, fill = "skyblue", color = "black") +
@@ -635,7 +619,6 @@ p2 <- ggplot(control_data, aes(x = amount)) +
   ylab("Frequency") +
   theme_classic()
 
-# Print the plots
 print(p1)
 print(p2)
 
@@ -683,7 +666,7 @@ treatment_mean <- mean(data$treatment, na.rm = TRUE)
 treatment_sd <- sd(data$treatment, na.rm = TRUE)
 
 # Simulate 100,000 draws from the control distribution and 10,000 from the treatment
-set.seed(123)  # For reproducibility
+set.seed(123) 
 control_draws <- rnorm(100000, control_mean, control_sd)
 treatment_draws <- rnorm(10000, treatment_mean, treatment_sd)
 
@@ -693,10 +676,8 @@ differences <- sapply(1:10000, function(i) treatment_draws[i] - sample(control_d
 # Calculate cumulative average
 cumulative_avg <- cumsum(differences) / seq_along(differences)
 
-# Create a dataframe for plotting
-df <- data.frame(Draw = 1:10000, CumulativeAverage = cumulative_avg)
 
-# Plot with ggplot2
+df <- data.frame(Draw = 1:10000, CumulativeAverage = cumulative_avg)
 p <- ggplot2::ggplot(df, aes(x = Draw, y = CumulativeAverage)) +
   ggplot2::geom_line() +
   ggplot2::geom_hline(yintercept = mean(differences), color = 'red', linetype = 'dashed') +
@@ -727,7 +708,6 @@ At the beginning, the cumulative average fluctuates significantly due to the sma
 #### Finally, I'm going to produce four histograms, corresponding to sample sizes of 50, 200, 500, and 1000. For each histogram, I’ll start by taking the specified number of draws from both the control and treatment distributions. I'll calculate the average difference between these draws. This process will be repeated 999 times to accumulate 1000 average differences. 
 
 ```{r}
-# Function to create data for histograms
 create_hist_data <- function(data, sample_size, num_samples) {
   replicate(num_samples, {
     sample_control <- sample(data$control, sample_size, replace = TRUE)
@@ -737,7 +717,7 @@ create_hist_data <- function(data, sample_size, num_samples) {
 }
 
 # Create histogram data for different sample sizes
-set.seed(123) # for reproducibility
+set.seed(123)
 hist_data_50 <- create_hist_data(data, 50, 1000)
 hist_data_200 <- create_hist_data(data, 200, 1000)
 hist_data_500 <- create_hist_data(data, 500, 1000)
