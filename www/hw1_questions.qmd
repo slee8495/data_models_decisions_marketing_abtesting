@@ -1,7 +1,6 @@
 ---
-title: "A Replication of Karlan and List (2007)"
 author: "Sangho Lee"
-date: today
+date: 5/17/2024
 format: html
 engines:
   - r
@@ -13,9 +12,6 @@ callout-appearance: minimal # this hides the blue "i" icon on .callout-notes
 
 Dean Karlan at Yale and John List at the University of Chicago conducted a field experiment to test the effectiveness of different fundraising letters. They sent out 50,000 fundraising letters to potential donors, randomly assigning each letter to one of three treatments: a standard letter, a matching grant letter, or a challenge grant letter. They published the results of this experiment in the *American Economic Review* in 2007. The article and supporting data are available from the [AEA website](https://www.aeaweb.org/articles?id=10.1257/aer.97.5.1774) and from Innovations for Poverty Action as part of [Harvard's Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/27853&version=4.2).
 
-*What kind of problem are we solving, what is the story?* - I am addressing a field experiment evaluation problem focused on determining the effectiveness of different fundraising approaches in increasing donation rates. This study forms part of a project for the UC San Diego, MSBA program; MGTA 495 - Marketing Analytics course.
-
-*What is the goal of the analysis?* - The goal of the analysis is to develop a statistical model to compare the success rates of the three different types of fundraising letters. The model will evaluate which approach is most effective in generating donations and will provide insights into how variations in message framing can impact donor behavior. Ultimately, this analysis will help guide fundraising strategies by identifying the most effective methods for soliciting donations, thus enabling more efficient and targeted fundraising campaigns.
 
 <br>
 
